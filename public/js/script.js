@@ -6,11 +6,23 @@ const ethButton = document.querySelector('#ethButton');
 btcButton.onclick = () => {
 	socket.emit('setMarket', 'BTC-EUR');
 	socket.emit('setTweetRule', '#btc');
+
+	const { data: dataArray } = myChart.data.datasets[0];
+
+	if (dataArray.length > 0) {
+		dataArray.length = 0;
+	}
 };
 
 ethButton.onclick = () => {
 	socket.emit('setMarket', 'ETH-EUR');
 	socket.emit('setTweetRule', '#eth');
+
+	const { data: dataArray } = myChart.data.datasets[0];
+
+	if (dataArray.length > 0) {
+		dataArray.length = 0;
+	}
 };
 
 const myChart = new Chart(ctx, {
