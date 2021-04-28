@@ -25,9 +25,16 @@ const bitvavo = require('bitvavo')().options({
 // 	}, 5000);
 // }
 
-function getBitcoinPrice(socket) {
+function setMarketFilter(socket) {
+	socket.on('setMarket', market => {
+		console.log(market);
+		getBitcoinPrice(socket, market);
+	});
+}
+
+function getBitcoinPrice(socket, market) {
 	return setInterval(() => {
-		bitvavo.tickerPrice({ market: 'BTC-EUR' }, (err, res) => {
+		bitvavo.tickerPrice({ market: market }, (err, res) => {
 			if (err === null) {
 				const data = {
 					price: res.price,
@@ -39,7 +46,7 @@ function getBitcoinPrice(socket) {
 				console.log(err);
 			}
 		});
-	}, 5000);
+	}, 2000);
 }
 
-module.exports = getBitcoinPrice;
+module.exports = { setMarketFilter, getBitcoinPrice };

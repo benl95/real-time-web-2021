@@ -13,7 +13,7 @@ const port = process.env.PORT || 3000;
 const home = require('./routes/home');
 
 // Import modules
-const getBitcoinPrice = require('./helpers/socket');
+const { setMarketFilter, getBitcoinPrice } = require('./helpers/socket');
 const {
 	getRules,
 	setRules,
@@ -40,14 +40,18 @@ io.on('connection', async socket => {
 
 		await deleteRules(currentRules);
 
-		await setRules();
+		socket.on('setTweetRule', rules => {
+			setRules(rules);
+			streamTweets(io);
+		});
+
+		// await setRules();
 	} catch (error) {
 		console.log(error);
 		process.exit(1);
 	}
 
-	streamTweets(io);
-	getBitcoinPrice(socket);
+	setMarketFilter(socket);
 });
 
 // Initiate server on port

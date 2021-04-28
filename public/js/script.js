@@ -1,5 +1,17 @@
 const socket = io();
 const ctx = document.querySelector('#lineChart');
+const btcButton = document.querySelector('#btcButton');
+const ethButton = document.querySelector('#ethButton');
+
+btcButton.onclick = () => {
+	socket.emit('setMarket', 'BTC-EUR');
+	socket.emit('setTweetRule', '#btc');
+};
+
+ethButton.onclick = () => {
+	socket.emit('setMarket', 'ETH-EUR');
+	socket.emit('setTweetRule', '#eth');
+};
 
 const myChart = new Chart(ctx, {
 	type: 'line',

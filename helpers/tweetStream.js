@@ -4,8 +4,6 @@ const rulesURL = 'https://api.twitter.com/2/tweets/search/stream/rules';
 const streamURL =
 	'https://api.twitter.com/2/tweets/search/stream?tweet.fields=public_metrics&expansions=author_id';
 
-const rules = [{ value: '#btc' }];
-
 // Get stream rules
 async function getRules() {
 	const res = await needle('get', rulesURL, {
@@ -18,7 +16,9 @@ async function getRules() {
 }
 
 // Set stream rules
-async function setRules() {
+async function setRules(value) {
+	const rules = [{ value: await value }];
+
 	const data = {
 		add: rules,
 	};
@@ -64,7 +64,7 @@ function streamTweets(socket) {
 		},
 	});
 
-	stream.on('data', data => {
+	stream.on('data', async data => {
 		try {
 			const json = JSON.parse(data);
 			socket.emit('tweet', json);
