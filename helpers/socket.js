@@ -28,18 +28,56 @@ const bitvavo = require('bitvavo')().options({
 function setMarketFilter(socket) {
 	socket.on('setMarket', market => {
 		console.log(market);
-		getBitcoinPrice(socket, market);
+
+		if (market === 'BTC-EUR') {
+			getBitcoinPrice(socket, market);
+		} else {
+			getEthereumPrice(socket, market);
+		}
 	});
 }
 
-function getBitcoinPrice(socket, market) {
-	return setInterval(() => {
-		bitvavo.tickerPrice({ market: market }, (err, res) => {
+function getEthereumPrice(socket, market) {
+	const interval = setInterval(async () => {
+		bitvavo.tickerPrice({ market: await market }, (err, res) => {
 			if (err === null) {
+				console.log(res);
+
 				const data = {
 					price: res.price,
 					time: new Date().toLocaleTimeString(),
 				};
+
+				socket.on('setMarket', market => {
+					if (market === 'BTC-EUR') {
+						clearInterval(interval);
+					}
+				});
+
+				socket.emit('data', data);
+			} else {
+				console.log(err);
+			}
+		});
+	}, 2000);
+}
+
+function getBitcoinPrice(socket, market) {
+	const interval = setInterval(async () => {
+		bitvavo.tickerPrice({ market: await market }, (err, res) => {
+			if (err === null) {
+				console.log(res);
+
+				const data = {
+					price: res.price,
+					time: new Date().toLocaleTimeString(),
+				};
+
+				socket.on('setMarket', market => {
+					if (market === 'ETH-EUR') {
+						clearInterval(interval);
+					}
+				});
 
 				socket.emit('data', data);
 			} else {
