@@ -33,14 +33,16 @@ app.use(express.static(path.join(__dirname, '/public')))
 
 // Websocket
 io.on('connection', async socket => {
+	let currentRules;
+
 	try {
+		currentRules = await getRules();
+
+		await deleteRules(currentRules);
+
 		socket.on('setTweetRule', async rules => {
-			let currentRules;
-
-			currentRules = await getRules();
-
+			let currentRules = await getRules();
 			await deleteRules(currentRules);
-
 			setRules(rules);
 			streamTweets(socket);
 		});
