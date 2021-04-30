@@ -8,9 +8,14 @@ btcButton.onclick = () => {
 	socket.emit('setTweetRule', '#btc');
 
 	const { data: dataArray } = myChart.data.datasets[0];
+	const { labels: labelsArray } = myChart.data;
 
 	if (dataArray.length > 0) {
 		dataArray.length = 0;
+	}
+
+	if (labelsArray.length > 0) {
+		labelsArray.length = 0;
 	}
 };
 
@@ -19,9 +24,14 @@ ethButton.onclick = () => {
 	socket.emit('setTweetRule', '#eth');
 
 	const { data: dataArray } = myChart.data.datasets[0];
+	const { labels: labelsArray } = myChart.data;
 
 	if (dataArray.length > 0) {
 		dataArray.length = 0;
+	}
+
+	if (labelsArray.length > 0) {
+		labelsArray.length = 0;
 	}
 };
 
