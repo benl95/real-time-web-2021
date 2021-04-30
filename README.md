@@ -1,125 +1,144 @@
 # Real-Time Web @cmda-minor-web · 2020/21
 
-## COVID-19 Dashboard
+## Cryptowatcher
 
-This application makes it possible for users to analyze real-time data regarding
-the COVID-19 Infections in The Netherlands. The data will be displayed in a
-chloropleth map visualization of The Netherlands that indicates the infections
-per province. This visualization will be combined with a real-time tweet stream
-of tweets in the context of COVID-19 in The Netherlands.
+Cryptowatcher is a platform where users can track the real-time price of Bitcoin
+and Ethereum. The price of the cryptocurrency will be displayed in a real-time
+line graph. The application also provides a real-time Tweet stream that streams
+all the streams and renders all the tweets regarding Bitcoin or Ethereum to the
+application.
 
-Features:
+## Live version
 
--  Map visualization with real-time data regarding COVID-19 infections in The
-   Netherlands.
--  Real-time tweet stream of tweets regarding COVID-19 in The Netherlands.
+You can view the live version here:
 
-## Data
+[Live version](https://rtw-cryptowatcher.herokuapp.com/)
 
-To retrieve data I will be using the
-[Twitter API](https://developer.twitter.com/en) for the tweet stream and the
-[Apify API](https://apify.com/covid-19) to get real-time data on COVID-19
-infections in The Netherlands. The dataset is updated every few hours.
+## Concepts
 
-### [Apify API](https://apify.com/covid-19) Example Data
+-  Real time COVID-19 Dashboard
+-  Karaoke room
+-  Real Time Cryptocurrency Dashboard
 
-```json
-{
-	"infected": 1381182,
-	"recovered": 18611,
-	"deceased": 16981,
-	"infectedByRegion": [
-		{
-			"region": "Zuid-Holland",
-			"infectedCount": 321846,
-			"deceasedCount": 4052
-		}
-	],
-	"country": "Netherlands",
-	"moreData": "https://api.apify.com/v2/key-value-stores/vqnEUe7VtKNMqGqFF/records/LATEST?disableRedirect=true",
-	"historyData": "https://api.apify.com/v2/datasets/jr5ogVGnyfMZJwpnB/items?format=json&clean=1",
-	"SOURCE_URL": "https://www.rivm.nl/en/novel-coronavirus-covid-19/current-information",
-	"lastUpdatedAtApify": "2021-04-13T11:02:59.000Z",
-	"readMe": "https://apify.com/lukass/covid-nl"
+The concept I chose to develop is the Cryptocurrency dashboard in combination
+with the Twitter API.
+
+## Data flow diagram
+
+<img src="https://user-images.githubusercontent.com/43675725/116656806-99c15800-a98d-11eb-8954-00b37342150b.png" width="900" height="500">
+
+## API
+
+The API's I will use for this application are the Bitvavo API to track the
+current price of a cryptocurrency and the Twitter API to track the current
+discussion regarding a cryptocoin on Twitter. The Bitvavo API returns a response
+with the current price of a coin every 2 seconds and the Twitter API returns a
+response with a Tweet regarding Bitcoin/Ethereum.
+
+### Fetching the data
+
+<details>
+<summary>Bitvavo API</summary>
+<br>
+Fetching data:
+
+```js
+function getEthereumPrice(socket, market) {
+	const interval = setInterval(async () => {
+		bitvavo.tickerPrice({ market: await market }, (err, res) => {
+			if (err === null) {
+				console.log(res);
+
+				const data = {
+					price: res.price,
+					time: new Date().toLocaleTimeString(),
+				};
+
+				socket.on('setMarket', market => {
+					if (market === 'BTC-EUR') {
+						clearInterval(interval);
+					}
+				});
+
+				socket.emit('data', data);
+			} else {
+				console.log(err);
+			}
+		});
+	}, 2000);
 }
 ```
 
-### [Twitter API](https://developer.twitter.com/en) Example data
+<br>
+Response:
 
 ```json
+[
+	{
+		"market": "BTC-EUR",
+		"price": "5003.2"
+	}
+]
+```
 
-{
+</details>
+
+<details>
+<summary>Twitter API</summary>
+<br>
+Fetching the data:
+
+```js
+function streamTweets(socket) {
+	const stream = needle.get(streamURL, {
+		headers: {
+			Authorization: `Bearer ${process.env.TWITTER_TOKEN}`,
+		},
+	});
+
+	stream.on('data', async data => {
+		try {
+			const json = JSON.parse(data);
+			socket.emit('tweet', json);
+		} catch (error) {
+			console.error(error);
+		}
+	});
+}
+```
+
+<br>
+Response:
+
+```json
   "data": [
     {
       "author_id": "2244994945",
-      "created_at": "2020-02-12T17:09:56.000Z",
-      "id": "1227640996038684673",
-      "text": "Doctors: Googling stuff online does not make you a doctor\n\nDevelopers: https://t.co/mrju5ypPkb"
+      "created_at": "2020-02-14T19:00:55.000Z",
+      "id": "1228393702244134912",
+      "text": "What did the developer write in their Valentine’s card?\n  \nwhile(true) {\n    I = Love(You);  \n}"
     },
-}
-
+  ]
 ```
 
-## Data modelling
+</details>
 
-### Spotify API
+## Features
 
-Properties:
-
--  OAuth 2.0
--  POST request to create rules for the tweet stream containing the following
-   operators:
-   -  `from:`
-   -  `has:links`
-
-Example using a POST request to set rules for the tweet stream:
-
-```js
-
-fetch('https://api.twitter.com/2/tweets/search/stream/rules', {
-   method: 'POST',
-   headers: {
-      'Content-type: application/json',
-      'Authorization: Bearer + $BEARER_TOKEN',
-      },
-   body: 'add': [
-      { "value": "from:twitterdev from:twitterapi has:links" }
-   ]
-})
-   .then(res => res.json())
-   .then(json => console.log(json))
-
-```
-
-### Apify API
-
-Properties:
-
--  GET request to get the latest dataset
-
-Example:
-
-```js
-fetch(
-	'https://api.apify.com/v2/key-value-stores/vqnEUe7VtKNMqGqFF/records/LATEST?disableRedirect=true'
-)
-	.then(res => {
-		const data = JSON.parse(res);
-		return data;
-	})
-	.then(data => console.log(data));
-```
+-  Real-time line graph with price updates
+-  Real-time Tweet stream
 
 ## Sketches UI
 
-<img src="https://user-images.githubusercontent.com/43675725/114549603-7d20e280-9c61-11eb-9cc9-458f78226465.jpeg" width="400" height="400">
-
-<img src="https://user-images.githubusercontent.com/43675725/114548980-c3297680-9c60-11eb-83f9-0cc07d7ed23d.jpeg" width="400" height="400">
+<img src="https://user-images.githubusercontent.com/43675725/116655424-5a920780-a98b-11eb-8492-8509dd29224d.jpeg" width="400" height="400">
 
 ## Dependencies
 
 -  Express
 -  Express-handlebars
+-  Bitvavo
+-  Needle
+-  dotenv
 -  Socket.io
 -  Nodemon
 
@@ -144,7 +163,3 @@ Run the project locally
 ## License
 
 MIT
-
-## Todo
-
--  Data modelling
