@@ -14,7 +14,7 @@ const port = process.env.PORT || 3000;
 const home = require('./routes/home');
 
 // Import modules
-const { updateDataModel } = require('./helpers/bitvavoAPI');
+const { updateDataModel } = require('./helpers/priceTicker');
 const { initTweetStream } = require('./helpers/tweetStream');
 const { initSocketIO } = require('./helpers/socket');
 

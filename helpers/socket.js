@@ -1,5 +1,5 @@
-const { getDataFile } = require('./bitvavoAPI');
-const { emitter } = require('./bitvavoAPI');
+const { getDataFile } = require('./priceTicker');
+const { emitter } = require('./priceTicker');
 
 function initSocketIO(server) {
 	const io = require('socket.io')(server);
