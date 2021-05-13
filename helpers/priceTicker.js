@@ -55,4 +55,4 @@ function updateDataModel() {
 	});
 }
 
-module.exports = { updateDataModel };
+module.exports = { updateDataModel, emitter };
