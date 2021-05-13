@@ -15,6 +15,7 @@ const home = require('./routes/home');
 
 // Import modules
 const { updateDataModel } = require('./helpers/bitvavoAPI');
+const { initTweetStream } = require('./helpers/tweetStream');
 const { initSocketIO } = require('./helpers/socket');
 
 // Set view engine
@@ -33,6 +34,9 @@ server.listen(port, () => {
 
 // Listen for price updates and store data
 updateDataModel();
+
+// Initialize tweet stream
+initTweetStream();
 
 // Initialize Socket.io
 initSocketIO(server);
