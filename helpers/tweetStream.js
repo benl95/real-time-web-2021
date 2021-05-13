@@ -1,31 +1,11 @@
+// Modules
 const needle = require('needle');
-const fs = require('fs');
+const { getDataFile, writeData } = require('./utils/writeReadData');
+
+// Enviroment variables
 const token = process.env.BEARER_TOKEN;
-
-const rulesURL = 'https://api.twitter.com/2/tweets/search/stream/rules';
-const streamURL = 'https://api.twitter.com/2/tweets/search/stream';
-
-function getDataFile() {
-	const json = fs.readFileSync('./data/tweets.json', 'utf-8', err => {
-		if (err) console.error(err);
-	});
-
-	const obj = JSON.parse(json);
-
-	return obj;
-}
-
-function writeData(data) {
-	const json = JSON.stringify(data);
-
-	fs.writeFileSync('./data/tweets.json', json, error => {
-		if (error) {
-			console.error(error);
-		} else {
-			console.log('Data stored');
-		}
-	});
-}
+const rulesURL = process.env.RULES_URL;
+const streamURL = process.env.STREAM_URL;
 
 function storedRules() {
 	const object = [
@@ -122,7 +102,7 @@ function streamTweets(retryAttempt) {
 	stream
 		.on('data', chunk => {
 			try {
-				const dataModel = getDataFile();
+				const dataModel = getDataFile('tweets.json');
 				const { tweets } = dataModel;
 
 				const tweet = JSON.parse(chunk);
@@ -134,7 +114,7 @@ function streamTweets(retryAttempt) {
 				};
 
 				tweets.push(object);
-				writeData(dataModel);
+				writeData(dataModel, 'tweets.json');
 
 				retryAttempt = 0;
 			} catch (error) {

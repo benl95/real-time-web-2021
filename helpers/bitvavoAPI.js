@@ -1,5 +1,6 @@
+// Modules
 const bitvavo = require('bitvavo')();
-const fs = require('fs');
+const { getDataFile, writeData } = require('./utils/writeReadData');
 
 function emitter() {
 	return bitvavo.getEmitter();
@@ -17,37 +18,15 @@ function initiatePriceTicker() {
 	}
 }
 
-function getDataFile() {
-	const json = fs.readFileSync('./data/data.json', 'utf-8', err => {
-		if (err) console.error(err);
-	});
-
-	const obj = JSON.parse(json);
-
-	return obj;
-}
-
-function writeData(data) {
-	const json = JSON.stringify(data);
-
-	fs.writeFileSync('./data/data.json', json, error => {
-		if (error) {
-			console.error(error);
-		} else {
-			console.log('Data stored');
-		}
-	});
-}
-
 function shiftAndPushDataModel(model, arr, data) {
 	arr.shift();
 	arr.push(data);
-	writeData(model);
+	writeData(model, 'data.json');
 }
 
 function pushDataModel(model, arr, data) {
 	arr.push(data);
-	writeData(model);
+	writeData(model, 'data.json');
 }
 
 function updateDataModel() {
@@ -62,7 +41,7 @@ function updateDataModel() {
 	bitvavoSocket.on('error', res => console.error(`Error: ${res}`));
 
 	bitvavoSocket.on('tickerPrice', res => {
-		const dataModel = getDataFile();
+		const dataModel = getDataFile('data.json');
 		const { price } = dataModel.eth;
 
 		const object = {
@@ -76,4 +55,4 @@ function updateDataModel() {
 	});
 }
 
-module.exports = { updateDataModel, getDataFile, emitter };
+module.exports = { updateDataModel };
