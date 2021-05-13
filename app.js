@@ -5,21 +5,17 @@ const hbs = require('express-handlebars');
 const http = require('http');
 const app = express();
 const server = http.createServer(app);
-const io = require('socket.io')(server);
 const path = require('path');
+
+// Port
 const port = process.env.PORT || 3000;
 
 // Routes
 const home = require('./routes/home');
 
 // Import modules
-const { setMarketFilter, getBitcoinPrice } = require('./helpers/socket');
-const {
-	getRules,
-	setRules,
-	deleteRules,
-	streamTweets,
-} = require('./helpers/tweetStream');
+const { updateDataModel } = require('./helpers/bitvavoAPI');
+const { initSocketIO } = require('./helpers/socket');
 
 // Set view engine
 app.set('view engine', 'hbs')
@@ -31,30 +27,12 @@ app.use(express.static(path.join(__dirname, '/public')))
 	.use(express.urlencoded({ extended: true }))
 	.use(home);
 
-// Websocket
-io.on('connection', async socket => {
-	let currentRules;
-
-	try {
-		currentRules = await getRules();
-
-		await deleteRules(currentRules);
-
-		socket.on('setTweetRule', async rules => {
-			let currentRules = await getRules();
-			await deleteRules(currentRules);
-			setRules(rules);
-			streamTweets(socket);
-		});
-	} catch (error) {
-		console.log(error);
-		process.exit(1);
-	}
-
-	setMarketFilter(socket);
-});
-
-// Initiate server on port
 server.listen(port, () => {
 	console.log(`Listening on port: ${port}`);
 });
+
+// Listen for price updates and store data
+updateDataModel();
+
+// Initialize Socket.io
+initSocketIO(server);

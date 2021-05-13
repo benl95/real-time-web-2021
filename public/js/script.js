@@ -1,89 +1,88 @@
 const socket = io();
 const ctx = document.querySelector('#lineChart');
-const btcButton = document.querySelector('#btcButton');
-const ethButton = document.querySelector('#ethButton');
+const currentDate = new Date().toLocaleDateString();
 
-btcButton.onclick = () => {
-	socket.emit('setMarket', 'BTC-EUR');
-	socket.emit('setTweetRule', '#btc');
-
-	const { data: dataArray } = myChart.data.datasets[0];
-	const { labels: labelsArray } = myChart.data;
-
-	if (dataArray.length > 0) {
-		dataArray.length = 0;
-	}
-
-	if (labelsArray.length > 0) {
-		labelsArray.length = 0;
-	}
-};
-
-ethButton.onclick = () => {
-	socket.emit('setMarket', 'ETH-EUR');
-	socket.emit('setTweetRule', '#eth');
-
-	const { data: dataArray } = myChart.data.datasets[0];
-	const { labels: labelsArray } = myChart.data;
-
-	if (dataArray.length > 0) {
-		dataArray.length = 0;
-	}
-
-	if (labelsArray.length > 0) {
-		labelsArray.length = 0;
-	}
-};
-
-const myChart = new Chart(ctx, {
+const lineChart = new Chart(ctx, {
 	type: 'line',
 	data: {
 		labels: [],
 		datasets: [
 			{
-				label: 'Price BTC',
-				backgroundColor: 'rgb(255, 99, 132)',
+				label: 'Rate ETH/EUR',
+				backgroundColor: 'rgba(18, 18, 18, 0.75)',
 				borderColor: 'rgb(255, 99, 132)',
 				data: [],
 			},
 		],
 	},
+	options: {
+		color: '#ffffff',
+		animations: {
+			tension: {
+				duration: 500,
+				easing: 'linear',
+				loop: true,
+			},
+		},
+		scales: {
+			y: {
+				beginAtZero: false,
+				ticks: {
+					callback: function (value, index, values) {
+						return `€ ${value}`;
+					},
+				},
+			},
+			x: {
+				beginAtZero: false,
+				ticks: {
+					stepSize: 0.2,
+				},
+			},
+		},
+	},
 });
 
+// function shiftAndPushChartArray() {}
+
+// function pushChartArray() {}
+
 socket.on('connect', () => {
-	console.log('Connected to server...');
+	socket.on('loadDataModel', price => {
+		const { data } = lineChart.data.datasets[0];
+		const { labels } = lineChart.data;
 
-	socket.on('data', data => {
-		const { price, time } = data;
-		const { data: dataArray } = myChart.data.datasets[0];
-		const { labels: labelsArray } = myChart.data;
+		price.forEach(item => {
+			const { price, time } = item;
 
-		dataArray.push(price);
-		labelsArray.push(time);
-
-		myChart.update();
+			data.push(price);
+			labels.push(time);
+			lineChart.update();
+		});
 	});
 
-	socket.on('tweet', tweet => {
-		const tweetData = {
-			id: tweet.data.id,
-			text: tweet.data.text,
-			username: `@${tweet.includes.users[0].username}`,
-		};
+	socket.on('currentPrice', ethCurrentPrice => {
+		const { data } = lineChart.data.datasets[0];
+		const { labels } = lineChart.data;
 
-		const tweetStream = document.querySelector('#tweetStream');
-		const tweetElement = document.createElement('div');
-		tweetElement.innerHTML = `
-			<div>
-				<h5>${tweetData.text}</h5>
-				<h6>${tweetData.username}</h6>
+		const { price, time } = ethCurrentPrice;
 
-				<a href="https://twitter.com/${tweetData.username}/status/${tweetData.id}"></a>
-			</div>
-		`;
+		if (data.length >= 30 && labels.length >= 30) {
+			data.shift();
+			data.push(price);
 
-		tweetStream.appendChild(tweetElement);
+			labels.shift();
+			labels.push(time);
 
-		setTimeout(() => tweetElement.remove(), 5000);
+			lineChart.update();
+		} else {
+			data.shift();
+			data.push(price);
+
+			labels.shift();
+			labels.push(time);
+
+			lineChart.update();
+		}
 	});
 });
