@@ -1,4 +1,4 @@
-const { getDataFile } = require('./priceTicker');
+const { getDataFile } = require('./utils/writeReadData');
 const { emitter } = require('./priceTicker');
 
 function initSocketIO(server) {
@@ -9,7 +9,7 @@ function initSocketIO(server) {
 		const socketId = socket.id;
 
 		try {
-			const dataModel = getDataFile();
+			const dataModel = getDataFile('data.json');
 			const { price } = dataModel.eth;
 
 			io.to(socketId).emit('loadDataModel', price);
