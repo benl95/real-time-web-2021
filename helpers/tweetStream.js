@@ -119,10 +119,10 @@ function streamTweets(retryAttempt) {
 				retryAttempt = 0;
 			} catch (error) {
 				if (
-					data.detail ===
+					chunk.detail ===
 					'This stream is currently at the maximum allowed connection limit.'
 				) {
-					console.log(data.detail);
+					console.log(chunk.detail);
 					process.exit(1);
 				} else {
 				}
