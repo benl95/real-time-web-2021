@@ -29,6 +29,7 @@ function storedRules() {
 	return object;
 }
 
+// Source: https://github.com/twitterdev/Twitter-API-v2-sample-code/blob/master/Filtered-Stream/filtered_stream.js
 async function getAllRules() {
 	const res = await needle('get', rulesURL, {
 		headers: {
@@ -44,6 +45,7 @@ async function getAllRules() {
 	return res.body;
 }
 
+// Source: https://github.com/twitterdev/Twitter-API-v2-sample-code/blob/master/Filtered-Stream/filtered_stream.js
 async function deleteAllRules(rules) {
 	if (!Array.isArray(rules.data)) {
 		return null;
@@ -71,6 +73,7 @@ async function deleteAllRules(rules) {
 	return res.body;
 }
 
+// Source: https://github.com/twitterdev/Twitter-API-v2-sample-code/blob/master/Filtered-Stream/filtered_stream.js
 async function setRules() {
 	const rules = storedRules();
 
@@ -134,7 +137,9 @@ function streamTweets(retryAttempt) {
 				process.exit(1);
 			} else {
 				setTimeout(() => {
-					console.warn('A connection error occurred. Reconnecting...');
+					console.warn(
+						'A connection error occurred. Reconnecting...'
+					);
 					streamTweets(++retryAttempt);
 				}, 2 ** retryAttempt);
 			}
@@ -143,6 +148,7 @@ function streamTweets(retryAttempt) {
 	return stream;
 }
 
+// Source: https://github.com/twitterdev/Twitter-API-v2-sample-code/blob/master/Filtered-Stream/filtered_stream.js
 async function initTweetStream() {
 	let currentRules;
 
