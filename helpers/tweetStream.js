@@ -108,16 +108,20 @@ function streamTweets(retryAttempt) {
 				const dataModel = getDataFile('tweets.json');
 				const { tweets } = dataModel;
 
-				const tweet = JSON.parse(chunk);
-				const { text } = tweet.data;
+				if (tweets.length >= 100) {
+					stream.close();
+				} else {
+					const tweet = JSON.parse(chunk);
+					const { text } = tweet.data;
 
-				const object = {
-					tweet: text,
-					time: new Date().toLocaleTimeString(),
-				};
+					const object = {
+						tweet: text,
+						time: new Date().toLocaleTimeString(),
+					};
 
-				tweets.push(object);
-				writeData(dataModel, 'tweets.json');
+					tweets.push(object);
+					writeData(dataModel, 'tweets.json');
+				}
 
 				retryAttempt = 0;
 			} catch (error) {
@@ -126,7 +130,7 @@ function streamTweets(retryAttempt) {
 					'This stream is currently at the maximum allowed connection limit.'
 				) {
 					console.log(chunk.detail);
-					process.exit(1);
+					stream.close();
 				} else {
 				}
 			}
@@ -134,7 +138,7 @@ function streamTweets(retryAttempt) {
 		.on('err', error => {
 			if (error.code !== 'ECONNRESET') {
 				console.log(error.code);
-				process.exit(1);
+				stream.close();
 			} else {
 				setTimeout(() => {
 					console.warn(
@@ -160,7 +164,6 @@ async function initTweetStream() {
 		await setRules();
 	} catch (error) {
 		console.error(error);
-		process.exit(1);
 	}
 
 	streamTweets(0);

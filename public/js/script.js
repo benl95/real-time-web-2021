@@ -85,4 +85,8 @@ socket.on('connect', () => {
 			lineChart.update();
 		}
 	});
+
+	socket.on('tweet', tweet => {
+		console.log(tweet);
+	});
 });
