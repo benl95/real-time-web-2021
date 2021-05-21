@@ -9,9 +9,9 @@ function initSocketIO(server) {
 		const socketId = socket.id;
 
 		try {
-			const ethData = getDataFile('data.json');
+			const data = getDataFile('data.json');
 
-			const { price } = ethData.eth;
+			const { price } = data.eth;
 
 			io.to(socketId).emit('loadDataModel', price);
 		} catch (error) {
@@ -23,7 +23,7 @@ function initSocketIO(server) {
 				const tweetsData = getDataFile('tweets.json');
 				const { tweets } = tweetsData;
 
-				if (tweets.length >= 30) {
+				if (tweets.length >= 10) {
 					tweets.shift();
 					writeData(tweetsData, 'tweets.json');
 					io.emit('tweet', tweets[0]);
@@ -33,22 +33,61 @@ function initSocketIO(server) {
 			} catch (error) {
 				console.error(error);
 			}
-		}, 5000);
+		}, 8000);
 
-		try {
-			bitvavoSocket.on('tickerPrice', res => {
-				const { price } = res;
+		let intervalId = setInterval(() => {
+			const data = getDataFile('data.json');
 
-				const ethCurrentPrice = {
-					price: price,
-					time: new Date().toLocaleTimeString(),
-				};
+			const eth = data.eth.price;
 
-				io.to(socketId).emit('currentPrice', ethCurrentPrice);
-			});
-		} catch (error) {
-			console.error(error);
-		}
+			io.to(socketId).emit('currentPrice', eth[0]);
+		}, 4000);
+
+		socket.on('setMarket', message => {
+			clearInterval(intervalId);
+
+			if (message === 'BTC-EUR') {
+				const data = getDataFile('data.json');
+
+				const model = data.btc.price;
+
+				io.to(socketId).emit('loadingNewMarket', model);
+
+				let intervalId = setInterval(() => {
+					const data = getDataFile('data.json');
+
+					const price = data.btc.price;
+
+					io.to(socketId).emit('currentPrice', price[0]);
+				}, 4000);
+
+				socket.on('setMarket', market => {
+					if (market === 'ETH-EUR') {
+						clearInterval(intervalId);
+					}
+				});
+			} else {
+				const data = getDataFile('data.json');
+
+				const model = data.eth.price;
+
+				io.to(socketId).emit('loadingNewMarket', model);
+
+				let intervalId = setInterval(() => {
+					const data = getDataFile('data.json');
+
+					const price = data.eth.price;
+
+					io.to(socketId).emit('currentPrice', price[0]);
+				}, 4000);
+
+				socket.on('setMarket', market => {
+					if (market === 'BTC-EUR') {
+						clearInterval(intervalId);
+					}
+				});
+			}
+		});
 
 		bitvavoSocket.on('error', res => console.error(`Error: ${res}`));
 		socket.on('disconnect', () => console.log('User disconnected'));
