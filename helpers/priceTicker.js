@@ -7,12 +7,21 @@ function emitter() {
 }
 
 function getEthPrice() {
-	return bitvavo.websocket.tickerPrice({ market: 'ETH-EUR' });
+	return bitvavo.websocket.tickerPrice({
+		market: 'ETH-EUR',
+	});
+}
+
+function getBtcPrice() {
+	return bitvavo.websocket.tickerPrice({
+		market: 'BTC-EUR',
+	});
 }
 
 function initiatePriceTicker() {
 	try {
 		setInterval(getEthPrice, 2000);
+		setInterval(getBtcPrice, 2000);
 	} catch (err) {
 		console.error(err);
 	}
@@ -42,16 +51,29 @@ function updateDataModel() {
 
 	bitvavoSocket.on('tickerPrice', res => {
 		const dataModel = getDataFile('data.json');
-		const { price } = dataModel.eth;
 
-		const object = {
-			price: res.price,
-			time: new Date().toLocaleTimeString(),
-		};
+		const eth = dataModel.eth.price;
+		const btc = dataModel.btc.price;
 
-		price.length >= 30
-			? shiftAndPushDataModel(dataModel, price, object)
-			: pushDataModel(dataModel, price, object);
+		if (res.market === 'BTC-EUR') {
+			const object = {
+				price: res.price,
+				time: new Date().toLocaleTimeString(),
+			};
+
+			btc.length >= 30
+				? shiftAndPushDataModel(dataModel, btc, object)
+				: pushDataModel(dataModel, btc, object);
+		} else {
+			const object = {
+				price: res.price,
+				time: new Date().toLocaleTimeString(),
+			};
+
+			eth.length >= 30
+				? shiftAndPushDataModel(dataModel, eth, object)
+				: pushDataModel(dataModel, eth, object);
+		}
 	});
 }
 
