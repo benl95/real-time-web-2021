@@ -15,7 +15,7 @@ const home = require('./routes/home');
 
 // Import modules
 const { updateDataModel } = require('./helpers/priceTicker');
-const { initTweetStream } = require('./helpers/tweetStream');
+const { checkTweetsDBLength } = require('./helpers/tweetStream');
 const { initSocketIO } = require('./helpers/socket');
 
 // Set view engine
@@ -36,7 +36,8 @@ server.listen(port, () => {
 updateDataModel();
 
 // Initialize tweet stream
-initTweetStream();
+checkTweetsDBLength();
+setInterval(checkTweetsDBLength, 10000);
 
 // Initialize Socket.io
 initSocketIO(server);
