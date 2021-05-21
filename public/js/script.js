@@ -2,6 +2,37 @@ const socket = io();
 const ctx = document.querySelector('#lineChart');
 const currentDate = new Date().toLocaleDateString();
 
+const node = document.querySelector('main');
+const section = document.createElement('section');
+node.appendChild(section);
+
+const ethButton = document.getElementById('eth');
+const btcButton = document.getElementById('btc');
+
+btcButton.onclick = () => {
+	socket.emit('setMarket', 'BTC-EUR');
+
+	const { data } = lineChart.data.datasets[0];
+	const { labels } = lineChart.data;
+
+	if (data.length > 0 && labels.length > 0) {
+		data.length = 0;
+		labels.length = 0;
+	}
+};
+
+ethButton.onclick = () => {
+	socket.emit('setMarket', 'ETH-EUR');
+
+	const { data } = lineChart.data.datasets[0];
+	const { labels } = lineChart.data;
+
+	if (data.length > 0 && labels.length > 0) {
+		data.length = 0;
+		labels.length = 0;
+	}
+};
+
 const lineChart = new Chart(ctx, {
 	type: 'line',
 	data: {
@@ -16,6 +47,14 @@ const lineChart = new Chart(ctx, {
 		],
 	},
 	options: {
+		plugins: {
+			legend: {
+				labels: {
+					legend: false,
+					usePointStyle: true,
+				},
+			},
+		},
 		color: '#ffffff',
 		animations: {
 			tension: {
@@ -43,10 +82,6 @@ const lineChart = new Chart(ctx, {
 	},
 });
 
-// function shiftAndPushChartArray() {}
-
-// function pushChartArray() {}
-
 socket.on('connect', () => {
 	socket.on('loadDataModel', price => {
 		const { data } = lineChart.data.datasets[0];
@@ -61,11 +96,27 @@ socket.on('connect', () => {
 		});
 	});
 
-	socket.on('currentPrice', ethCurrentPrice => {
+	socket.on('loadingNewMarket', dataset => {
 		const { data } = lineChart.data.datasets[0];
 		const { labels } = lineChart.data;
 
-		const { price, time } = ethCurrentPrice;
+		console.log(dataset);
+
+		dataset.forEach(entry => {
+			labels.push(entry.time);
+			data.push(entry.price);
+		});
+
+		lineChart.update();
+	});
+
+	socket.on('currentPrice', currentPrice => {
+		const { data } = lineChart.data.datasets[0];
+		const { labels } = lineChart.data;
+
+		console.log(currentPrice);
+
+		const { price, time } = currentPrice;
 
 		if (data.length >= 30 && labels.length >= 30) {
 			data.shift();
@@ -87,6 +138,13 @@ socket.on('connect', () => {
 	});
 
 	socket.on('tweet', tweet => {
-		console.log(tweet);
+		const tweetElement = document.createElement('article');
+		tweetElement.innerHTML = `
+				<h4>${tweet.tweet}</h4>
+				<time>${tweet.time}</time>
+		`;
+
+		section.appendChild(tweetElement);
+		setInterval(() => tweetElement.remove(), 10000);
 	});
 });
