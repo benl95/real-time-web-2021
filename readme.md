@@ -251,21 +251,48 @@ Response:
 Fetching the data:
 
 ```js
-function streamTweets(socket) {
+function streamTweets(retryAttempt) {
 	const stream = needle.get(streamURL, {
 		headers: {
-			Authorization: `Bearer ${process.env.TWITTER_TOKEN}`,
+			Authorization: `Bearer ${token}`,
 		},
 	});
 
-	stream.on('data', async data => {
+	stream.on('data', chunk => {
 		try {
-			const json = JSON.parse(data);
-			socket.emit('tweet', json);
+			const dataModel = getDataFile('tweets.json');
+			const { tweets } = dataModel;
+
+			if (tweets.length === 60) {
+				stream.close();
+			} else {
+				const tweet = JSON.parse(chunk);
+				const { text } = tweet.data;
+
+				const object = {
+					tweet: text,
+					time: new Date().toLocaleTimeString(),
+				};
+
+				tweets.push(object);
+				writeData(dataModel, 'tweets.json');
+			}
+
+			retryAttempt = 0;
 		} catch (error) {
-			console.error(error);
+			if (
+				chunk.detail ===
+				'This stream is currently at the maximum allowed connection limit.'
+			) {
+				console.log(chunk.detail);
+				console.error(error);
+				stream.close();
+			} else {
+			}
 		}
 	});
+
+	return stream;
 }
 ```
 
