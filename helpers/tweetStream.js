@@ -108,7 +108,7 @@ function streamTweets(retryAttempt) {
 				const dataModel = getDataFile('tweets.json');
 				const { tweets } = dataModel;
 
-				if (tweets.length >= 100) {
+				if (tweets.length === 60) {
 					stream.close();
 				} else {
 					const tweet = JSON.parse(chunk);
@@ -130,6 +130,7 @@ function streamTweets(retryAttempt) {
 					'This stream is currently at the maximum allowed connection limit.'
 				) {
 					console.log(chunk.detail);
+					console.error(error);
 					stream.close();
 				} else {
 				}
@@ -138,6 +139,7 @@ function streamTweets(retryAttempt) {
 		.on('err', error => {
 			if (error.code !== 'ECONNRESET') {
 				console.log(error.code);
+				console.error(error);
 				stream.close();
 			} else {
 				setTimeout(() => {
@@ -169,4 +171,22 @@ async function initTweetStream() {
 	streamTweets(0);
 }
 
-module.exports = { initTweetStream };
+function checkTweetsDBLength() {
+	const dataModel = getDataFile('tweets.json');
+	const { tweets } = dataModel;
+
+	console.log('Checking tweets...');
+
+	if (tweets.length < 10) {
+		console.log(
+			`Currently there are ${tweets.length} tweets in the DB, initializing stream`
+		);
+		initTweetStream();
+	} else {
+		console.log(
+			`Currently there are ${tweets.length} tweets in the DB, stream is closed`
+		);
+	}
+}
+
+module.exports = { checkTweetsDBLength };
